@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>С 8 Марта 🌸</title>
+
+<style>
+
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:linear-gradient(135deg,#ff7eb3,#ff9ecf,#ffc2e0);
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  overflow-x:hidden;
+}
+
+.card{
+  background:rgba(255,255,255,0.2);
+  backdrop-filter:blur(15px);
+  border-radius:25px;
+  padding:25px;
+  width:90%;
+  max-width:420px;
+  text-align:center;
+  box-shadow:0 15px 40px rgba(0,0,0,0.2);
+}
+
+button{
+  padding:10px 16px;
+  border:none;
+  border-radius:20px;
+  background:white;
+  color:#ff4da6;
+  font-size:16px;
+  cursor:pointer;
+  margin:6px;
+}
+
+#gameBoard{
+  display:none;
+  grid-template-columns:repeat(4,70px);
+  gap:12px;
+  justify-content:center;
+  margin-top:20px;
+}
+
+.cardItem{
+  width:70px;
+  height:70px;
+  perspective:800px;
+  cursor:pointer;
+}
+
+.cardInner{
+  width:100%;
+  height:100%;
+  position:relative;
+  transition:transform 0.5s;
+  transform-style:preserve-3d;
+}
+
+.cardItem.flip .cardInner{
+  transform:rotateY(180deg);
+}
+
+.cardFront,.cardBack{
+  position:absolute;
+  width:100%;
+  height:100%;
+  border-radius:12px;
+  backface-visibility:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.cardFront{
+  background:url("card.jpg") center/cover no-repeat;
+}
+
+.cardBack{
+  background:#ff6fa5;
+  transform:rotateY(180deg);
+  font-size:28px;
+}
+
+#videoBlock{
+  display:none;
+  margin-top:20px;
+}
+
+video{
+  width:100%;
+  border-radius:12px;
+}
+
+/* сакура */
+
+.petal{
+  position:fixed;
+  top:-20px;
+  font-size:20px;
+  pointer-events:none;
+  animation:fall linear forwards;
+}
+
+@keyframes fall{
+  0%{transform:translateY(-20px) rotate(0deg);}
+  100%{transform:translateY(110vh) rotate(360deg);}
+}
+
+/* мобильная версия */
+
+@media(max-width:480px){
+
+  #gameBoard{
+    grid-template-columns:repeat(4,60px);
+    gap:10px;
+  }
+
+  .cardItem{
+    width:60px;
+    height:60px;
+  }
+
+  .cardBack{
+    font-size:22px;
+  }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<h1>Поздравляю тебя с 8 марта!</h1>
+<h2>Пусть каждый день приносит радость, улыбки и хорошие моменты 💖</h2>
+<p>Найди пары карточек дальше там ваще АХХАХА🎁</p>
+
+<button id="startBtn">Начать игру 💖</button>
+
+<div id="gameBoard"></div>
+
+<div id="videoBlock">
+  <h3>ТАДАААМ 🎉</h3>
+  <video controls autoplay playsinline muted>
+    <source src="video.mp4" type="video/mp4">
+  </video>
+</div>
+
+</div>
+
+<audio id="music" loop>
+<source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+
+/* игра */
+
+const symbols=["💖","🌸","🎀","🌷","✨","🦋","🌟","💝"]
+
+let firstCard=null
+let secondCard=null
+let lock=false
+let matches=0
+
+const board=document.getElementById("gameBoard")
+const music=document.getElementById("music")
+
+document.getElementById("startBtn").onclick=startGame
+
+function startGame(){
+  document.getElementById("startBtn").style.display="none"
+  board.style.display="grid"
+  music.play()
+  startSakura()
+
+  let cards=[...symbols,...symbols]
+  cards.sort(()=>Math.random()-0.5)
+
+  cards.forEach(symbol=>{
+    let card=document.createElement("div")
+    card.className="cardItem"
+    card.dataset.symbol=symbol
+    card.innerHTML=`
+      <div class="cardInner">
+        <div class="cardFront"></div>
+        <div class="cardBack">${symbol}</div>
+      </div>
+    `
+    card.onclick=flipCard
+    board.appendChild(card)
+  })
+}
+
+function flipCard(){
+  if(lock) return
+  if(this===firstCard) return
+
+  this.classList.add("flip")
+
+  if(!firstCard){
+    firstCard=this
+    return
+  }
+
+  secondCard=this
+  lock=true
+
+  if(firstCard.dataset.symbol===secondCard.dataset.symbol){
+    matches++
+    firstCard=null
+    secondCard=null
+    lock=false
+
+    if(matches===symbols.length){
+      gameWin()
+    }
+
+  }else{
+    setTimeout(()=>{
+      firstCard.classList.remove("flip")
+      secondCard.classList.remove("flip")
+      firstCard=null
+      secondCard=null
+      lock=false
+    },700)
+  }
+}
+
+function gameWin(){
+  setTimeout(()=>{
+    board.style.display="none"
+    showVideo()
+  },800)
+}
+
+function showVideo(){
+  document.getElementById("videoBlock").style.display="block"
+  music.pause()
+  const video=document.querySelector("#videoBlock video")
+  video.play()
+}
+
+/* сакура */
+
+function startSakura(){
+  setInterval(()=>{
+    const petal=document.createElement("div")
+    petal.className="petal"
+    petal.innerText="🌸"
+    petal.style.left=Math.random()*100+"vw"
+    petal.style.fontSize=(12+Math.random()*12)+"px"
+    petal.style.animationDuration=(5+Math.random()*5)+"s"
+    document.body.appendChild(petal)
+    setTimeout(()=>petal.remove(),10000)
+  },300)
+}
+
+</script>
+
+</body>
+</html>
